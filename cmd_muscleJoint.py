@@ -10,8 +10,18 @@ n = sl[0].split('_')[1]
 crv = cmds.curve(p=[(0,0,0),(0,0,0),(0,0,0)],degree=2,name='crv_'+n)
 crvS = cmds.listRelatives(crv,shapes=1)[0]
 cmds.parent(crv,p,relative=1)
-for i in range(3) :
- cmds.connectAttr(sl[i]+'.translate',crv+'.controlPoints['+str(i)+']')
+crvL = cmds.curve(p=[(0,0,0),(0,0,0)],degree=1,name=crv+'Linear')
+crvLS = cmds.listRelatives(crvL,shapes=1)[0]
+cmds.parent(crvL,p,relative=1)
+for i in range(3) : cmds.connectAttr(sl[i]+'.translate',crvS+'.controlPoints['+str(i)+']')
+cmds.connectAttr(sl[0]+'.translate',crvLS+'.controlPoints[0]')
+cmds.connectAttr(sl[2]+'.translate',crvLS+'.controlPoints[1]')
+poci = cmds.createNode('pointOnCurveInfo')
+npoc = cmds.createNode('nearestPointOnCurve')
+cmds.connectAttr(crvLS+'.local',poci+'.inputCurve')
+cmds.setAttr(poci+'.parameter',0.5)
+cmds.connectAttr(poci+'.result.position',npoc+'.inPosition')
+cmds.connectAttr(crvS+'.local',npoc+'.inputCurve')
 cons = [] ; len = [] ; jo =[]
 for i in range(2) :
  cons.append(cmds.createNode('transform',name=sl[i].replace('pos_','cons_'),parent=p))
@@ -24,7 +34,8 @@ for i in range(2) :
 cmds.connectAttr(sl[0]+'.translate',cons[0]+'.translate')
 poci = cmds.createNode('pointOnCurveInfo')
 cmds.connectAttr(crvS+'.local',poci+'.inputCurve')
-cmds.setAttr(poci+'.parameter',0.5)
+#cmds.setAttr(poci+'.parameter',0.5)
+cmds.connectAttr(npoc+'.parameter',poci+'.parameter')
 cmds.connectAttr(poci+'.result.position',cons[1]+'.translate')
 cmds.aimConstraint(cons[1],cons[0],aimVector=av,upVector=[0,1,0],worldUpType='none')
 cmds.aimConstraint(sl[2],cons[1],aimVector=av,upVector=[0,1,0],worldUpType='none')
